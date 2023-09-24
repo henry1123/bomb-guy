@@ -87,6 +87,16 @@ function placeBomb() {
   }
 }
 
+function isGameOver(): boolean {
+  return (
+    map[playery][playerx] === Tile.FIRE ||
+    map[playery][playerx] === Tile.MONSTER_DOWN ||
+    map[playery][playerx] === Tile.MONSTER_UP ||
+    map[playery][playerx] === Tile.MONSTER_LEFT ||
+    map[playery][playerx] === Tile.MONSTER_RIGHT
+  );
+}
+
 function update() {
   while (!gameOver && inputs.length > 0) {
     let current = inputs.pop();
@@ -96,15 +106,8 @@ function update() {
     else if (current === Input.DOWN) move(0, 1);
     else if (current === Input.PLACE) placeBomb();
   }
-
-  if (
-    map[playery][playerx] === Tile.FIRE ||
-    map[playery][playerx] === Tile.MONSTER_DOWN ||
-    map[playery][playerx] === Tile.MONSTER_UP ||
-    map[playery][playerx] === Tile.MONSTER_LEFT ||
-    map[playery][playerx] === Tile.MONSTER_RIGHT
-  )
-    gameOver = true;
+  
+  gameOver = isGameOver();
 
   if (--delay > 0) return;
   delay = DELAY;
@@ -163,48 +166,65 @@ function update() {
   }
 }
 
+function drawMap(g: CanvasRenderingContext2D) {
+    // Draw map
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 0; x < map[y].length; x++) {
+        if (map[y][x] === Tile.UNBREAKABLE) g.fillStyle = "#999999";
+        else if (map[y][x] === Tile.STONE) g.fillStyle = "#0000cc";
+        else if (map[y][x] === Tile.EXTRA_BOMB) g.fillStyle = "#00cc00";
+        else if (map[y][x] === Tile.FIRE) g.fillStyle = "#ffcc00";
+        else if (
+          map[y][x] === Tile.MONSTER_UP ||
+          map[y][x] === Tile.MONSTER_LEFT ||
+          map[y][x] === Tile.MONSTER_RIGHT ||
+          map[y][x] === Tile.MONSTER_DOWN
+        )
+          g.fillStyle = "#cc00cc";
+        else if (map[y][x] === Tile.BOMB) g.fillStyle = "#770000";
+        else if (map[y][x] === Tile.BOMB_CLOSE) g.fillStyle = "#cc0000";
+        else if (map[y][x] === Tile.BOMB_REALLY_CLOSE) g.fillStyle = "#ff0000";
+  
+        if (map[y][x] !== Tile.AIR)
+          g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+    }
+}
+
+function drawPlayer(g: CanvasRenderingContext2D) {
+   // Draw player
+   g.fillStyle = "#00ff00";
+   if (!gameOver)
+     g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+}
+
+function clearRect(canvas: HTMLCanvasElement, g: CanvasRenderingContext2D) {
+  g.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 function draw() {
   let canvas = <HTMLCanvasElement>document.getElementById("GameCanvas");
   let g = canvas.getContext("2d");
+  
+  clearRect(canvas, g)
 
-  g.clearRect(0, 0, canvas.width, canvas.height);
+  drawMap(g)
 
-  // Draw map
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === Tile.UNBREAKABLE) g.fillStyle = "#999999";
-      else if (map[y][x] === Tile.STONE) g.fillStyle = "#0000cc";
-      else if (map[y][x] === Tile.EXTRA_BOMB) g.fillStyle = "#00cc00";
-      else if (map[y][x] === Tile.FIRE) g.fillStyle = "#ffcc00";
-      else if (
-        map[y][x] === Tile.MONSTER_UP ||
-        map[y][x] === Tile.MONSTER_LEFT ||
-        map[y][x] === Tile.MONSTER_RIGHT ||
-        map[y][x] === Tile.MONSTER_DOWN
-      )
-        g.fillStyle = "#cc00cc";
-      else if (map[y][x] === Tile.BOMB) g.fillStyle = "#770000";
-      else if (map[y][x] === Tile.BOMB_CLOSE) g.fillStyle = "#cc0000";
-      else if (map[y][x] === Tile.BOMB_REALLY_CLOSE) g.fillStyle = "#ff0000";
-
-      if (map[y][x] !== Tile.AIR)
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-  }
-
-  // Draw player
-  g.fillStyle = "#00ff00";
-  if (!gameOver)
-    g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  drawPlayer(g)
+ 
 }
 
 function gameLoop() {
   let before = Date.now();
+ 
   update();
   draw();
+ 
   let after = Date.now();
+ 
   let frameTime = after - before;
   let sleep = SLEEP - frameTime;
+ 
   setTimeout(() => gameLoop(), sleep);
 }
 
