@@ -65,16 +65,31 @@ function explode(x: number, y: number, type: Tile) {
   }
 }
 
+function isAIR(x: number, y: number) {
+  return (map[y][x] == Tile.AIR);
+}
+
+function isFIRE(x: number, y: number) {
+  return (map[y][x] == Tile.FIRE);
+}
+
+function incPlayerXY(x: number, y: number) {
+  playerx += x;
+  playery += y;
+}
+
+function isEXTRA_BOMB(x: number, y: number) {
+  return (map[y][x] == Tile.EXTRA_BOMB);
+}
+
 function move(x: number, y: number) {
   if (
-    map[playery + y][playerx + x] === Tile.AIR ||
-    map[playery + y][playerx + x] === Tile.FIRE
+    isAIR(playerx + x, playery + y) ||
+    isFIRE(playerx + x, playery + y)
   ) {
-    playery += y;
-    playerx += x;
-  } else if (map[playery + y][playerx + x] === Tile.EXTRA_BOMB) {
-    playery += y;
-    playerx += x;
+    incPlayerXY(x, y);
+  } else if (isEXTRA_BOMB(playerx + x, playery + y)) {
+    incPlayerXY(x, y);
     bombs++;
     map[playery][playerx] = Tile.AIR;
   }
@@ -198,15 +213,15 @@ function drawPlayer(g: CanvasRenderingContext2D) {
      g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-function clearRect(canvas: HTMLCanvasElement, g: CanvasRenderingContext2D) {
-  g.clearRect(0, 0, canvas.width, canvas.height);
+function clearRect(g: CanvasRenderingContext2D, w: number, h: number) {
+  g.clearRect(0, 0, w, h);
 }
 
 function draw() {
   let canvas = <HTMLCanvasElement>document.getElementById("GameCanvas");
   let g = canvas.getContext("2d");
   
-  clearRect(canvas, g)
+  clearRect(g, canvas.width, canvas.height)
 
   drawMap(g)
 
